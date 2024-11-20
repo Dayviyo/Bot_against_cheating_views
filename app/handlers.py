@@ -2,6 +2,7 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 
+from app.database import add_or_update_channel
 from app.keyboards import settings_keyboard
 
 router = Router()
@@ -19,22 +20,31 @@ async def settings(message: Message):
 @router.callback_query(F.data == "add_channel")
 async def handle_add_channel(callback: CallbackQuery):
     """Обработка выбора 'Добавить канал'."""
-    await callback.message.answer(
-        "Чтобы добавить канал, введите данные в формате:\n"
-        "`channel_id message_id max_views time_interval repost_delay`\n\n"
-        "Пример: `123456789 1 500 120 60`",
-        parse_mode="Markdown"
-    )
-    await callback.answer()  # Закрыть окно уведомления
+    pass
 
 
 @router.callback_query(F.data == "delete_channel")
 async def handle_delete_channel(callback: CallbackQuery):
     """Обработка выбора 'Удалить канал'."""
-    await callback.message.answer(
-        "Чтобы удалить канал, отправьте его ID в следующем формате:\n"
-        "`/delete_channel <channel_id>`\n\n"
-        "Пример: `/delete_channel 123456789`",
-        parse_mode="Markdown"
-    )
-    await callback.answer()  # Закрыть окно уведомления
+    pass
+
+
+@router.channel_post()
+async def handle_message(message: Message):
+    """Обработка сообщений из канала и запись данных в базу."""
+    if message.chat.type == "channel":  # Проверяем, что сообщение пришло из канала
+        channel_id = message.chat.id
+        message_id = message.message_id
+        title = message.chat.title
+
+        # Параметры по умолчанию (можно изменить на основе пользовательских настроек)
+        max_views = 200  # Лимит просмотров
+        repost_delay = 60  # Задержка в секундах перед повторной публикацией
+        
+        # Сохраняем данные в базу
+        try:
+            await add_or_update_channel(channel_id, title, message_id, max_views, repost_delay)
+        except Exception as e:
+            print(f"Ошибка при добавлении в базу: {e}")
+    else:
+        print("Получено сообщение не из канала.")

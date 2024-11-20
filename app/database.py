@@ -9,28 +9,35 @@ async def init_db():
         CREATE TABLE IF NOT EXISTS channels (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             channel_id TEXT NOT NULL UNIQUE,
+            channel_title TEXT,
             message_id INTEGER,
             max_views INTEGER NOT NULL,
-            time_interval INTEGER NOT NULL,
             repost_delay INTEGER NOT NULL
         )
         """)
         await conn.commit()
 
 
-async def add_or_update_channel(channel_id, message_id, max_views, time_interval, repost_delay):
+async def add_or_update_channel(channel_id, channel_title, message_id, max_views, repost_delay):
     """Добавление нового канала или обновление существующего."""
+    
+    # Проверяем, существует ли канал в базе
     async with aiosqlite.connect(DB_PATH) as conn:
+        cursor = await conn.execute("SELECT 1 FROM channels WHERE channel_id = ?", (channel_id,))
+        existing_channel = await cursor.fetchone()
+
+        if existing_channel:
+            print(f"Канал с ID {channel_id} уже существует в базе. Пропускаем добавление.")
+            return  # Если канал уже есть, не добавляем его снова
+
+        # Если канал не существует, добавляем его
         await conn.execute("""
-        INSERT INTO channels (channel_id, message_id, max_views, time_interval, repost_delay)
+        INSERT INTO channels (channel_id, channel_title, message_id, max_views, repost_delay)
         VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(channel_id) DO UPDATE SET
-            message_id=excluded.message_id,
-            max_views=excluded.max_views,
-            time_interval=excluded.time_interval,
-            repost_delay=excluded.repost_delay
-        """, (channel_id, message_id, max_views, time_interval, repost_delay))
+        """, (channel_id, channel_title, message_id, max_views, repost_delay))
         await conn.commit()
+        print(f"Канал {channel_title} успешно добавлен в базу.")
+
 
 
 async def get_channel_settings(channel_id):

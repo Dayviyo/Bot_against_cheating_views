@@ -1,6 +1,7 @@
 import asyncio
 import sqlite3
 
+
 async def monitor_channels(bot):
     while True:
         print('Мониторю')
@@ -11,10 +12,10 @@ async def monitor_channels(bot):
         conn.close()
 
         for channel in channels:
-            channel_id, message_id, max_views, time_interval, repost_delay = channel[1:]
+            channel_id, channel_title, message_id, max_views, repost_delay = channel[1:]
             try:
                 # Получаем сообщение
-                message = await bot.get_chat_message(channel_id, message_id)
+                message = pass
 
                 # Проверяем просмотры
                 if message.views > max_views:
@@ -24,6 +25,9 @@ async def monitor_channels(bot):
                     await asyncio.sleep(repost_delay)
                     await bot.send_message(channel_id, message.text)
 
+                print(f'Просмотры канала {channel_title} не превысили норму')
+
             except Exception as e:
-                print(f"Ошибка с каналом {channel_id}: {e}")
+                print(f"Ошибка с каналом {channel_title}: {e}")
         await asyncio.sleep(10)
+

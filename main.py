@@ -21,6 +21,7 @@ async def main():
     
     try:
         await dp.start_polling(bot)
+
     finally:
         monitoring_task.cancel()
         await monitoring_task
