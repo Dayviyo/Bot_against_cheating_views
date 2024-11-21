@@ -39,16 +39,16 @@ async def add_or_update_channel(channel_id, channel_title, message_id, max_views
         print(f"Канал '{channel_title}' успешно добавлен в базу.")
 
 
-async def get_channel_settings(channel_id):
-    """Получение настроек канала по его ID."""
-    async with aiosqlite.connect(DB_PATH) as conn:
-        async with conn.execute("SELECT * FROM channels WHERE channel_id = ?", (channel_id,)) as cursor:
-            channel = await cursor.fetchone()
-    return channel
-
-
 async def delete_channel(channel_id):
     """Удаление канала из базы данных."""
     async with aiosqlite.connect(DB_PATH) as conn:
         await conn.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
         await conn.commit()
+
+
+async def fetch_channels():
+    """Получить список каналов из базы данных."""
+    async with aiosqlite.connect(DB_PATH) as conn:
+        async with conn.execute("SELECT channel_id, channel_title FROM channels") as cursor:
+            channels = await cursor.fetchall()
+    return channels
