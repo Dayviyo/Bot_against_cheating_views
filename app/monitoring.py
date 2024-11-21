@@ -1,6 +1,8 @@
 import asyncio
 import aiosqlite
+
 from app.script import get_message_views
+from app.database import delete_channel
 
 DB_PATH = "app/data.db"
 
@@ -26,8 +28,10 @@ async def monitor_channels(bot):
                 # Получаем информацию о сообщении
                 message = await get_message_views(int(channel_id), int(message_id))
 
-                repost_delay = 15
-                max_views = 0
+                # Удаление забаненного канала
+                if message == 'error':
+                    await delete_channel(channel_id)
+                    continue
 
                 # Проверяем просмотры
                 if message.views > max_views:
