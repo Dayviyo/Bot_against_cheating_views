@@ -32,6 +32,7 @@ async def handle_delete_channel(callback: CallbackQuery):
 @router.channel_post()
 async def handle_message(message: Message):
     """Обработка сообщений из канала и запись данных в базу."""
+    print('Пришло сообщение в канал!')
     if message.chat.type == "channel":  # Проверяем, что сообщение пришло из канала
         channel_id = message.chat.id
         message_id = message.message_id
@@ -43,6 +44,8 @@ async def handle_message(message: Message):
         
         # Сохраняем данные в базу
         try:
+            print('Сохраняю в кнаал')
+            
             await add_or_update_channel(channel_id, title, message_id, max_views, repost_delay)
         except Exception as e:
             print(f"Ошибка при добавлении в базу: {e}")

@@ -36,7 +36,7 @@ async def add_or_update_channel(channel_id, channel_title, message_id, max_views
         VALUES (?, ?, ?, ?, ?)
         """, (channel_id, channel_title, message_id, max_views, repost_delay))
         await conn.commit()
-        print(f"Канал {channel_title} успешно добавлен в базу.")
+        print(f"Канал '{channel_title}' успешно добавлен в базу.")
 
 
 

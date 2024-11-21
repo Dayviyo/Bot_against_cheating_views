@@ -1,33 +1,59 @@
 import asyncio
-import sqlite3
+import aiosqlite
+from app.script import get_message_views
 
+DB_PATH = "app/data.db"
 
 async def monitor_channels(bot):
     while True:
         print('Мониторю')
-        conn = sqlite3.connect("app/data.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM channels")
-        channels = cursor.fetchall()
-        conn.close()
+
+        # Интервал времени через который будут проверяться сообщения
+        TIME_INTERVAL = 10
+
+        async with aiosqlite.connect(DB_PATH) as conn:
+            async with conn.execute("SELECT * FROM channels") as cursor:
+                channels = await cursor.fetchall()
+
+        if not channels:
+            print('Нет каналов для мониторинга')
+            await asyncio.sleep(TIME_INTERVAL)
+            continue
 
         for channel in channels:
             channel_id, channel_title, message_id, max_views, repost_delay = channel[1:]
             try:
-                # Получаем сообщение
-                message = pass
+                # Получаем информацию о сообщении
+                message = await get_message_views(int(channel_id), int(message_id))
+
+                repost_delay = 15
+                max_views = 0
 
                 # Проверяем просмотры
                 if message.views > max_views:
+                    print(f'Пост в канале "{channel_title}" превысил норму: {message.views} просмотров!')
+                    
+                    # Удаляем сообщение
                     await bot.delete_message(channel_id, message_id)
 
-                    # Публикуем через задержку
+                    # Публикуем сообщение снова через задержку
                     await asyncio.sleep(repost_delay)
-                    await bot.send_message(channel_id, message.text)
+                    new_message = await bot.send_message(channel_id, message.text)
 
-                print(f'Просмотры канала {channel_title} не превысили норму')
+                    # Обновляем message_id в базе данных
+                    async with aiosqlite.connect(DB_PATH) as conn:
+                        await conn.execute(
+                            "UPDATE channels SET message_id = ? WHERE channel_id = ?",
+                            (new_message.message_id, channel_id)
+                        )
+                        await conn.commit()
+
+                    print(f'Пост в канале "{channel_title}" опубликован снова')
+
+                else:
+                    print(f'Просмотры канала "{channel_title}" не превысили норму')
 
             except Exception as e:
-                print(f"Ошибка с каналом {channel_title}: {e}")
-        await asyncio.sleep(10)
+                print(f"Ошибка с каналом '{channel_title}': {e}")
 
+        await asyncio.sleep(TIME_INTERVAL)
