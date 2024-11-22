@@ -65,7 +65,7 @@ async def handle_message(message: Message):
         
         # Сохраняем данные в базу
         try:
-            await add_or_update_channel(channel_id, title, message_id, MAX_VIEWS, REPOST_DELAY)
+            await add_or_update_channel(channel_id, title, message_id, MAX_VIEWS, 1, REPOST_DELAY)
             
         except Exception as e:
             main_logger.error(f"Ошибка при добавлении в базу: {e}")
