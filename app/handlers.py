@@ -16,8 +16,8 @@ async def cmd_start(message: Message):
 
 @router.message(Command('settings'))
 async def settings(message: Message):
-    if message.from_user.username in tg_username:
-        await message.answer('Какую функцию ты хочешь использовать?', reply_markup=settings_keyboard)
+    if message.from_user.username == tg_username:
+        await message.answer('Какую функцию хочешь использовать?', reply_markup=settings_keyboard)
     
     else:
         await message.answer('Вам недоступна эта функция')
