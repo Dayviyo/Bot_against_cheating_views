@@ -28,8 +28,13 @@ async def add_or_update_channel(channel_id, channel_title, message_id, max_views
         existing_channel = await cursor.fetchone()
 
         if existing_channel:
-            main_logger.info(f"Канал с ID {channel_id} уже существует в базе. Пропускаем добавление.")
-            return  # Если канал уже есть, не добавляем его снова
+            main_logger.info(f"В канал {channel_title} пришло новое сообщение. Теперь буду отслеживать его")
+            await conn.execute(
+                    "UPDATE channels SET message_id = ? WHERE channel_id = ?",
+                    (message_id, channel_id)
+                )
+            await conn.commit()
+            return
 
         # Если канал не существует, добавляем его
         await conn.execute("""
