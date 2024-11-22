@@ -1,7 +1,7 @@
 import asyncio
 import aiosqlite
 
-from app.script import get_message_views
+from app.get_views_script import get_message_views
 from app.database import delete_channel
 
 DB_PATH = "app/data.db"

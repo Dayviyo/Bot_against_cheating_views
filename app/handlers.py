@@ -4,6 +4,7 @@ from aiogram.filters import CommandStart, Command
 
 from app.database import add_or_update_channel, delete_channel
 from app.keyboards import settings_keyboard, all_channels_keyboard
+from params import tg_username
 
 router = Router()
 
@@ -14,21 +15,31 @@ async def cmd_start(message: Message):
 
 @router.message(Command('settings'))
 async def settings(message: Message):
-    await message.answer('Какую функцию ты хочешь использовать?', reply_markup=settings_keyboard)
+    print(message.from_user.username)
+    if message.from_user.username in tg_username:
+        await message.answer('Какую функцию ты хочешь использовать?', reply_markup=settings_keyboard)
+    
+    else:
+        await message.answer('Вам недоступна эта функция')
 
 
 @router.callback_query(F.data == "delete_channel")
 async def handle_delete_channel(callback: CallbackQuery):
     """Обработка выбора 'Удалить канал'."""
-    await callback.answer()
+    await callback.answer()  # Закрываем callback-запрос
 
     channels_keyboard = await all_channels_keyboard()
 
     if channels_keyboard is None:
-        callback.message.answer("Нет каналов в базе данных")
+        # Редактируем текст предыдущего сообщения
+        await callback.message.edit_text("Нет каналов в базе данных")
         return
 
-    await callback.message.answer("Выберите канал для удаления:", reply_markup=channels_keyboard.as_markup())
+    # Редактируем текст и добавляем клавиатуру
+    await callback.message.edit_text(
+        "Выберите канал для удаления:",
+        reply_markup=channels_keyboard.as_markup()
+    )
 
 
 # Обработка выбора канала для удаления
