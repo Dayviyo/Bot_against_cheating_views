@@ -1,4 +1,5 @@
 from params import API_ID, API_HASH
+from app.logger import main_logger
 
 from telethon import TelegramClient
 from telethon.errors import ChannelPrivateError, ChannelInvalidError, NeedChatInvalidError
@@ -16,9 +17,10 @@ async def get_message_views(channel_id, message_id):
             if message:
                 return message
             else:
-                print("Сообщение не найдено.")
+                main_logger.error("Сообщение не найдено. Канал будет удален из базы данных")
+                return 'error'
         
         # Проверка на существование канала
         except (ChannelPrivateError, ChannelInvalidError, NeedChatInvalidError) as e:
-            print(f"Ошибка доступа к каналу {channel_id}: {e}")
-            return "error"
+            main_logger.error(f"Ошибка доступа к каналу {channel_id}: {e}.\nВозможно канал удален или заблокирован")
+            return 'error'

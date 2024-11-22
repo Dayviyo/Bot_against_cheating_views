@@ -4,7 +4,8 @@ from aiogram.filters import CommandStart, Command
 
 from app.database import add_or_update_channel, delete_channel
 from app.keyboards import settings_keyboard, all_channels_keyboard
-from params import tg_username
+from params import tg_username, MAX_VIEWS, REPOST_DELAY
+from app.logger import main_logger
 
 router = Router()
 
@@ -15,7 +16,6 @@ async def cmd_start(message: Message):
 
 @router.message(Command('settings'))
 async def settings(message: Message):
-    print(message.from_user.username)
     if message.from_user.username in tg_username:
         await message.answer('Какую функцию ты хочешь использовать?', reply_markup=settings_keyboard)
     
@@ -38,8 +38,7 @@ async def handle_delete_channel(callback: CallbackQuery):
     # Редактируем текст и добавляем клавиатуру
     await callback.message.edit_text(
         "Выберите канал для удаления:",
-        reply_markup=channels_keyboard.as_markup()
-    )
+        reply_markup=channels_keyboard.as_markup())
 
 
 # Обработка выбора канала для удаления
@@ -51,7 +50,7 @@ async def handle_channel_deletion(callback: CallbackQuery):
     try:
         await delete_channel(channel_id)
         await callback.message.edit_text(f"Канал с ID {channel_id} успешно удалён.")
-        print(f"Канал с ID {channel_id} успешно удалён.")
+
     except Exception as e:
         await callback.message.edit_text(f"Ошибка при удалении канала: {e}")
 
@@ -59,22 +58,16 @@ async def handle_channel_deletion(callback: CallbackQuery):
 @router.channel_post()
 async def handle_message(message: Message):
     """Обработка сообщений из канала и запись данных в базу."""
-    print('Пришло сообщение в канал!')
     if message.chat.type == "channel":  # Проверяем, что сообщение пришло из канала
         channel_id = message.chat.id
         message_id = message.message_id
         title = message.chat.title
-
-        # Параметры по умолчанию (можно изменить на основе пользовательских настроек)
-        max_views = 200  # Лимит просмотров
-        repost_delay = 60  # Задержка в секундах перед повторной публикацией
         
         # Сохраняем данные в базу
         try:
-            print('Сохраняю в кнаал')
-
-            await add_or_update_channel(channel_id, title, message_id, max_views, repost_delay)
+            await add_or_update_channel(channel_id, title, message_id, MAX_VIEWS, REPOST_DELAY)
+            
         except Exception as e:
-            print(f"Ошибка при добавлении в базу: {e}")
+            main_logger.error(f"Ошибка при добавлении в базу: {e}")
     else:
-        print("Получено сообщение не из канала.")
+        main_logger.info("Получено сообщение не из канала.")

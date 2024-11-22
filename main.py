@@ -5,7 +5,7 @@ from app.handlers import router
 from params import API_TOKEN
 from app.database import init_db
 from app.monitoring import monitor_channels
-
+from app.logger import main_logger
 
 async def main():
     # Инициализация базы данных
@@ -30,4 +30,4 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Бот выключен')
+        main_logger.info('Бот выключен')

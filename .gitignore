@@ -3,3 +3,4 @@ params.py
 __pycache__/
 data.db
 *session
+logs

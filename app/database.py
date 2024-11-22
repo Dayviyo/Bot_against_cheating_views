@@ -1,4 +1,5 @@
 import aiosqlite
+from app.logger import main_logger
 
 DB_PATH = "app/data.db"
 
@@ -27,7 +28,7 @@ async def add_or_update_channel(channel_id, channel_title, message_id, max_views
         existing_channel = await cursor.fetchone()
 
         if existing_channel:
-            print(f"Канал с ID {channel_id} уже существует в базе. Пропускаем добавление.")
+            main_logger.info(f"Канал с ID {channel_id} уже существует в базе. Пропускаем добавление.")
             return  # Если канал уже есть, не добавляем его снова
 
         # Если канал не существует, добавляем его
@@ -36,14 +37,19 @@ async def add_or_update_channel(channel_id, channel_title, message_id, max_views
         VALUES (?, ?, ?, ?, ?)
         """, (channel_id, channel_title, message_id, max_views, repost_delay))
         await conn.commit()
-        print(f"Канал '{channel_title}' успешно добавлен в базу.")
+        main_logger.info(f"Канал '{channel_title}' успешно добавлен в базу.")
 
 
 async def delete_channel(channel_id):
     """Удаление канала из базы данных."""
     async with aiosqlite.connect(DB_PATH) as conn:
-        await conn.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
-        await conn.commit()
+        try:
+            await conn.execute("DELETE FROM channels WHERE channel_id = ?", (channel_id,))
+            await conn.commit()
+
+            main_logger.error(f'Канал {channel_id} успешно удален')
+        except Exception as e:
+            main_logger.error(f'Произошла ошибка удаление канала {channel_id}: {e}')
 
 
 async def fetch_channels():
